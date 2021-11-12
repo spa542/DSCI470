@@ -115,7 +115,7 @@ def plot_loan_amount_vs_loan_amount_term(lp_df):
 
 def print_cross_val_score_with_fold(classifier, x_train, y_train, fold, scoring):
     print(f'Fold = {fold}')
-    print(f'Cross Validation Score: {cross_val_score(classifier, x_train, y_train, cv=fold, scoring=scoring)}
+    print(f'Cross Validation Score: {cross_val_score(classifier, x_train, y_train, cv=fold, scoring=scoring)}')
 
 def print_confusion_matrix_and_stats(classifier, x_train, y_train, fold):
     y_train_pred_cross_value = cross_val_predict(classifier, x_train, y_train, cv=fold)
@@ -153,7 +153,7 @@ def plot_roc_curve_and_print_roc_auc_score(classifier, x_train, y_train, fold, m
     Y_scores = cross_val_predict(classifier, x_train, y_train, cv=fold, method=method)
     print('ROC AUC Score:')
     print(roc_auc_score(y_train, Y_scores))
-    fpr, tpr, thresholds = roc_curve(Y_train, Y_scores)
+    fpr, tpr, thresholds = roc_curve(y_train, Y_scores)
     plot_roc_curve(fpr, tpr)
 
 def print_accuracy_score(y_train, y_pred):
@@ -192,7 +192,7 @@ def plot_accuracy_vs_threshold(threshold_list, accuracy_list):
     plt.title('Accuracy vs. Threshold Logistic Regression', fontsize=25)
     plt.show()
 
-def compute_testtrain_split_accuracy():
+def compute_testtrain_split_accuracy(X_lp_train, Y_lp_train):
     test_size_list = [.05,.1,.15,.2,.25,.3,.35,.4,.45,.5,.55,.6,.65,.7,.75,.8]
     accuracy_list = []
     for i in test_size_list:
