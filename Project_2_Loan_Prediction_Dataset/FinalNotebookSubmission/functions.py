@@ -8,7 +8,15 @@ from sklearn.metrics import accuracy_score, classification_report, confusion_mat
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split, cross_val_score, cross_val_predict
 from sklearn.naive_bayes import GaussianNB
-
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
+import matplotlib as mpl
+import os
+import tarfile
+import urllib
+from matplotlib import colors
+from scipy import linalg
 
 def plot_loan_amounts_vs_marital_status(lp_df): 
     sub_lp_df = lp_df[['Married', 'LoanAmount']]
@@ -210,5 +218,178 @@ def plot_testtrain_slit_vs_accuracy(test_size_list, accuracy_list):
     plt.xlabel(f'Test Size (Train = 1 - Test Size)', fontsize=25)
     plt.ylabel('Accuracy %', fontsize=25)
     plt.title('Test/Train Split vs. Accuracy', fontsize=30)
+    plt.show()
+
+def load_data():
+    return pd.read_csv("Dataset/loan-train.csv"), pd.read_csv("Dataset/loan-test.csv")
+
+def explore_object_type(df ,feature_name):
+    """
+    To know, How many values available in object('categorical') type of features
+    And Return Categorical values with Count.
+    """    
+    if df[feature_name].dtype ==  'object':
+        print(df[feature_name].value_counts())
+def clean_data(Data):
+    Data['Gender'] = Data['Gender'].fillna('Not Specified')
+    Data['Married'] = Data['Married'].fillna('Not Specified')
+    Data['Dependents'] = Data['Dependents'].fillna(0)
+    Data['Self_Employed'] = Data['Self_Employed'].fillna('No')
+    Data['LoanAmount'] = Data['LoanAmount'].fillna(0)
+    Data['Loan_Amount_Term'] = Data['Loan_Amount_Term'].fillna(0)
+    Data.loc[Data['Loan_Amount_Term'] == 'Not Specified', 'Loan_Amount_Term'] = 0
+    Data['Credit_History'] = Data['Credit_History'].fillna(0)
+    return Data
+
+#Parameters:
+#    Data: pandas DataFrame
+#Return:
+#    Per column finds the means of what has one
+def find_means(Data):
+    for i in Data.columns:
+        print(f"The mean of {i}: {round(pd.to_numeric(Data[i], errors='coerce').mean(),2)}")
+
+#Parameters:
+#    Data: pandas DataFrame
+#Return:
+#    Per column counts number of diffrent types
+def count_types(Data):
+    for featureName in Data.columns:
+        if Data[featureName].dtype == 'object':
+            print('\n"' + str(featureName) + '\'s" Values with count are :')
+            explore_object_type(Data, str(featureName))
+
+#Parameters:
+#    Data: pandas DataFrame
+#Return:
+#    Per column counts the number of nan
+def count_nan(Data):
+    print(Data.isna().sum())
+
+
+#Parameters:
+#    Data: pandas DataFrame specifically the loan dataset
+#Return:
+#    
+def ApplicantVSLoanAmmount(Data):
+    plt.figure(figsize=(18, 6))
+    plt.title("Relation Between Applicant Income vs Loan Amount ")
+
+    plt.grid()
+    plt.scatter(Data['ApplicantIncome'].loc[(Data['LoanAmount'] != 0)] , Data['LoanAmount'].loc[(Data['LoanAmount'] != 0)], c='k', marker='x')
+    plt.xlabel("Applicant Income")
+    plt.ylabel("Loan Amount")
+    plt.show()
+
+#Parameters:
+#    Data: pandas DataFrame specifically the loan dataset
+#Return:
+#    
+def ApplicantVSCoApplicant(Data):
+    plt.figure(figsize=(18, 6))
+    plt.title("Relation Between Applicant Income vs Co-Applicant Income ")
+
+    plt.grid()
+    plt.scatter(Data['ApplicantIncome'].loc[(Data['CoapplicantIncome'] != 0)] , Data['CoapplicantIncome'].loc[(Data['CoapplicantIncome'] != 0)], c='k', marker='x')
+    plt.xlabel("Applicant Income")
+    plt.ylabel("Co-Applicant Income")
+    plt.show()
+
+#Parameters:
+#    Data: pandas DataFrame specifically the loan dataset
+#Return:
+#      
+def GradVSNotGradIncome(Data):
+    grad = Data[['ApplicantIncome', 'Education']][(Data['Education'] == 'Graduate') & (Data['ApplicantIncome']<20000)]
+    notgrad = Data[['ApplicantIncome', 'Education']][(Data['Education'] == 'Not Graduate') & (Data['ApplicantIncome']<20000)]
+    plt.hist(grad['ApplicantIncome'], bins=75, alpha=0.5, label='Graduates')
+    plt.hist(notgrad['ApplicantIncome'], bins=75, alpha=0.5, label='Not Graduates')
+    plt.legend(loc='upper right')
+    plt.title("Relation Between Applicant Income vs Co-Applicant Income ")
+    plt.xlabel("Applicant Income")
+    plt.ylabel("Frequency")
+    plt.show()
+
+#Parameter:
+#    Data: pandas DataFrame specifically the loan dataset
+#Return:
+#
+def applicantIncomeGradeVSNot(Data):
+    gradplt = Data['ApplicantIncome'][Data['Education'] == 'Graduate']
+    notgradplt = Data['ApplicantIncome'][Data['Education'] == 'Not Graduate']
+    plt.boxplot((gradplt, notgradplt), showfliers=False)
+    plt.ylabel("Applicant Income")
+    plt.title("Relation Between Applicant Income vs Applicant Education ")
+    plt.xticks([1,2],["Graduates",'Not Graduates'])
+    plt.show()
+
+#Parameter:
+#    Data: pandas DataFrame specifically the loan dataset
+#Return:
+#
+def CoapplicantIncomeGradeVSNot(Data):
+    grads = Data['CoapplicantIncome'].loc[((Data['Education'] == 'Graduate') & (Data['CoapplicantIncome'] != 0))]
+    notgrads = Data['CoapplicantIncome'].loc[((Data['Education'] == 'Not Graduate') & (Data['CoapplicantIncome'] != 0))]
+
+    plt.boxplot((grads,notgrads), showfliers=False)
+    plt.ylabel(" Co-Applicant Income")
+    plt.title("Relation Between Applicant Education vs Co-Applicant Income ")
+    plt.xticks([1,2],["Graduates",'Not Graduates'])
+    plt.show()
+
+def IncomeVSLocation(Data):
+    Urban = Data['ApplicantIncome'].loc[(Data['Property_Area'] == 'Urban')]
+    SemiUrban = Data['ApplicantIncome'].loc[(Data['Property_Area'] == 'Semiurban')]
+    Rural = Data['ApplicantIncome'].loc[(Data['Property_Area'] == 'Rural')]
+
+    plt.boxplot((Urban,SemiUrban,Rural), showfliers=False)
+    plt.ylabel("Applicant Income")
+    plt.title("Relation Between Applicant Property Area vs Applicant Income")
+    plt.xticks([1,2,3],["Urban",'Semi-Urban','Rural'])
+    plt.show()
+
+def knn_predict_acuracy(KNNC, k, X_test):
+    X_val = []
+    guess=[]
+    holder = []
+    total=0
+    for i in range(0, len(X_test)):#Accuracy for i number of n's 
+        Y_pred_KNNC = KNNC.predict(X_test[i:i+1])
+        holder.append(Y_pred_KNNC[0])
+        hold = (1 if Y_pred_KNNC == Y_test[i:i+1] else 0)
+        total+= hold
+        X_val.append(total/(i+1))
+    guess = KNNC.predict(X_test)
+    print(f"Final accuracy check for k={k} : {X_val[len(X_test)-1]}")
+    print(f'Confusion Matrix for k={k}:\n {confusion_matrix(Y_test, guess)}')
+    print(f'Precission Score for k={k}:\n {precision_score(Y_test, guess)}')
+    print(f'Recall Score for k={k}:\n {recall_score(Y_test, guess)}')
+    print(f'F1 score for k={k}:\n {f1_score(Y_test, guess)}')
+    return X_val
+
+def KNNGraph(Data, kstart, kend):
+    XTrain = Data[['ApplicantIncome', 'CoapplicantIncome', 'LoanAmount', 'Loan_Amount_Term']]
+    YTrain = Data[['Loan_Status']]
+    # Change the Y values from N : Y to 0 : 1
+    YTrain.loc[YTrain['Loan_Status'] == 'N', 'Loan_Status'] = 0
+    YTrain.loc[YTrain['Loan_Status'] == 'Y', 'Loan_Status'] = 1
+    X_train, X_test, Y_train, Y_test = train_test_split(XTrain.values, YTrain.values.ravel(), test_size=.3)
+    Y_train = Y_train.astype('int')
+    Y_test = Y_test.astype('int')
+
+    plt.figure(figsize=(14,10))
+    kstart=5 #starting k value
+    kend=15  #ending k value
+    acc = []
+    print("Before for loop")
+    for k in range(kstart,kend+1):
+        print(f"In for loop {i}")
+        KNNC = KNeighborsClassifier(n_neighbors=k)
+        KNNC = KNNC.fit(X_train, Y_train)
+        plt.plot(np.arange(1,len(X_test)+1), knn_predict_acuracy(KNNC, k, X_test), label=f"k={k}")
+    plt.legend([f'k={i}' for i in range(kstart,kend+1)], fontsize=20)
+    plt.title('Accuracy percentage by N', fontsize=25)
+    plt.xlabel('N', fontsize=20)
+    plt.ylabel('Percentage', fontsize=20)
     plt.show()
 
