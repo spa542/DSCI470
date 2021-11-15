@@ -221,7 +221,7 @@ def plot_testtrain_slit_vs_accuracy(test_size_list, accuracy_list):
     plt.show()
 
 def load_data():
-    return pd.read_csv("Dataset/loan-train.csv"), pd.read_csv("Dataset/loan-test.csv")
+    return pd.read_csv("../Dataset/loan-train.csv"), pd.read_csv("../Dataset/loan-test.csv")
 
 def explore_object_type(df ,feature_name):
     """
@@ -348,7 +348,7 @@ def IncomeVSLocation(Data):
     plt.xticks([1,2,3],["Urban",'Semi-Urban','Rural'])
     plt.show()
 
-def knn_predict_acuracy(KNNC, k, X_test):
+def knn_predict_acuracy(KNNC, k, X_test, Y_test):
     X_val = []
     guess=[]
     holder = []
@@ -383,10 +383,10 @@ def KNNGraph(Data, kstart, kend):
     acc = []
     print("Before for loop")
     for k in range(kstart,kend+1):
-        print(f"In for loop {i}")
+        print(f"In for loop {k}")
         KNNC = KNeighborsClassifier(n_neighbors=k)
         KNNC = KNNC.fit(X_train, Y_train)
-        plt.plot(np.arange(1,len(X_test)+1), knn_predict_acuracy(KNNC, k, X_test), label=f"k={k}")
+        plt.plot(np.arange(1,len(X_test)+1), knn_predict_acuracy(KNNC, k, X_test, Y_test), label=f"k={k}")
     plt.legend([f'k={i}' for i in range(kstart,kend+1)], fontsize=20)
     plt.title('Accuracy percentage by N', fontsize=25)
     plt.xlabel('N', fontsize=20)
